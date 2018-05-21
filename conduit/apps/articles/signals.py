@@ -1,3 +1,4 @@
+import re
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -9,6 +10,12 @@ def create_slug_for_article(sender, instance, created, *args, **kwargs):
     # the first time the `Article` instance is created. If the save that caused
     # this signal to be run was an update action, we know the article already
     # has a slug.
+    MAX_SLUG_LEN = 255
+
     if instance and created:
         if not instance.slug:
-            instance.slug = 'temp_slug'
+            if len(instance.title) < MAX_SLUG_LEN:
+                instance.slug = re.sub(r" ", "-", instance.title)
+            else:
+                tmp_title = instance.title[:MAX_SLUG_LEN].strip()
+                instance.slug = re.sub(r" ", "-", tmp_title)
