@@ -28,9 +28,7 @@ class ArticleSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         author = self.context.get('author', None)
 
-        article = Article.objects.create(author=author, **validated_data) #pylint: disable=no-member
-
-        return article
+        return Article.objects.create(author=author, **validated_data) #pylint: disable=no-member
     
     def get_created_at(self, instance):
         return instance.created_at.isoformat()
