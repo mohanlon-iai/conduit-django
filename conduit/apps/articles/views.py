@@ -19,4 +19,21 @@ class ArticleViewSet(
     """
     serializer_class = ArticleSerializer
     renderer_classes = (ArticleJSONRenderer,)
-    queryset = Article.objects.all()    #pylint: disable=no-member    
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    queryset = Article.objects.all()    #pylint: disable=no-member
+
+    def create(self, request, *args, **kwargs):
+        serializer_data = request.data.get('article', {})
+        serializer_context = {'author': request.user.profile}
+
+        serializer = self.serializer_class(
+            data=serializer_data,
+            context=serializer_context
+        )
+
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

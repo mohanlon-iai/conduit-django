@@ -12,7 +12,6 @@ class ConduitJSONRenderer(JSONRenderer):
 
         if isinstance(data, ReturnList):
             pluralized_label = self.object_label_plural if len(data) > 1 else self.object_label
-            print(pluralized_label)
             object_count = len(data)
             _data = json.loads(
                 super(ConduitJSONRenderer, self).render(data).decode(self.charset)
