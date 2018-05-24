@@ -20,7 +20,8 @@ class ArticleViewSet(
     serializer_class = ArticleSerializer
     renderer_classes = (ArticleJSONRenderer,)
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    queryset = Article.objects.all()    #pylint: disable=no-member
+    queryset = Article.objects.select_related('author', 'author__user')    #pylint: disable=no-member
+    lookup_field = 'slug'
 
     def create(self, request, *args, **kwargs):
         serializer_data = request.data.get('article', {})
@@ -37,3 +38,31 @@ class ArticleViewSet(
         headers = self.get_success_headers(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def retrieve(self, request, slug):
+        try:
+            serializer_instance = self.queryset.get(slug=slug)
+        except Article.DoesNotExist:    #pylint: disable=no-member
+            raise NotFound('An article with this slug does not exist.')
+
+        serializer = self.serializer_class(serializer_instance)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def update(self, request, slug):
+        try:
+            serializer_instance = self.queryset.get(slug=slug)
+        except Article.DoesNotExist:    #pylint: disable=no-member
+            raise NotFound('An article with this slug does not exist.')
+
+        serializer_data = request.data.get('article', {})
+
+        serializer = self.serializer_class(
+            serializer_instance,
+            data=serializer_data, 
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
